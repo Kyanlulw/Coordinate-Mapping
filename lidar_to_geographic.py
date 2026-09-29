@@ -169,21 +169,96 @@ def georeference_points(xyz: np.ndarray, oxts: np.ndarray,
     return coordinates, metadata
 
 
-# Save UTM coordinates, assumed height, and intensity as an ASCII PCD file.
-def write_utm_pcd(path, coordinates, intensity, epsg):
-    """Use ASCII float64 XYZ; legacy Open3D cannot read binary float64 PCD XYZ."""
+def load_frame(sequence, frame):
+    """Read a synchronized KITTI scan and its matching 30-field OXTS packet."""
+    if frame < 0:
+        raise ValueError("frame must be nonnegative")
+    stem = f"{frame:010d}"
+    scan_path = Path(sequence) / "velodyne_points/data" / f"{stem}.bin"
+    if scan_path.stat().st_size == 0 or scan_path.stat().st_size % 16:
+        raise ValueError(f"Invalid KITTI scan: {scan_path}")
+    scan = np.fromfile(scan_path, dtype="<f4").reshape(-1, 4)
+    pose = np.loadtxt(Path(sequence) / "oxts/data" / f"{stem}.txt").reshape(-1)
+    if not np.isfinite(scan).all() or len(pose) != 30 or not np.isfinite(pose).all():
+        raise ValueError(f"Frame {frame}: expected finite scan and 30 finite OXTS values")
+    return scan, pose
+
+
+def make_world_reference(oxts, height_offset_m=0.0):
+    """A single fixed ENU origin for all frames; World is not per-frame ENU."""
+    lat, lon, alt = np.asarray(oxts)[:3]
+    automatic_utm_epsg(lat, lon)
+    height = float(alt + height_offset_m)
+    if not np.isfinite(height):
+        raise ValueError("Reference height must be finite")
+    transformer = Transformer.from_crs(4979, 4978, always_xy=True)
+    return {
+        "latitude_deg": float(lat), "longitude_deg": float(lon),
+        "height_assumed_ellipsoid_m": height,
+        "origin_ecef_m": list(transformer.transform(lon, lat, height, errcheck=True)),
+        "R_ecef_from_world": enu_to_ecef_rotation(lat, lon).tolist(),
+        "axes": "Fixed ENU: x east, y north, z up; meters, relative to reference IMU",
+    }
+
+
+def ecef_to_world(ecef_xyz, reference):
+    return ((np.asarray(ecef_xyz) - np.asarray(reference["origin_ecef_m"]))
+            @ np.asarray(reference["R_ecef_from_world"]))
+
+
+def error_statistics(residuals):
+    """Euclidean residual statistics; callers define whether this is 2D or 3D."""
+    distances = np.linalg.norm(np.asarray(residuals), axis=1)
+    return {"count": len(distances), "rmse_m": float(np.sqrt(np.mean(distances ** 2))),
+            "median_m": float(np.median(distances)),
+            "p95_m": float(np.percentile(distances, 95)), "max_m": float(distances.max())}
+
+
+def numerical_checks(xyz, coordinates, metadata):
+    """Round trips and independent PROJ ENU check, not ground-truth accuracy."""
+    transform = np.asarray(metadata["T_ecef_from_lidar"])
+    inverse = np.linalg.inv(transform[:3, :3])
+    recovered = (coordinates["ecef_m"] - transform[:3, 3]) @ inverse.T
+    to_wgs = Transformer.from_crs(metadata["utm_epsg"], 4326, always_xy=True)
+    lon, lat = to_wgs.transform(coordinates["utm_easting_m"], coordinates["utm_northing_m"],
+                               errcheck=True)
+    to_ecef = Transformer.from_crs(4979, 4978, always_xy=True)
+    reconstructed = np.column_stack(to_ecef.transform(
+        lon, lat, coordinates["height_assumed_ellipsoid_m"], errcheck=True))
+    origin = metadata["origin_oxts"]
+    independent = Transformer.from_pipeline(
+        f"+proj=topocentric +ellps=WGS84 +lat_0={origin['latitude_deg']} "
+        f"+lon_0={origin['longitude_deg']} +h_0={metadata['origin_assumed_ellipsoidal_height_m']}"
+    )
+    independent_enu = np.column_stack(independent.transform(*coordinates["ecef_m"].T, errcheck=True))
+    return {
+        "ecef_to_lidar_roundtrip_3d": error_statistics(recovered - xyz),
+        "utm_height_to_ecef_roundtrip_3d": error_statistics(reconstructed - coordinates["ecef_m"]),
+        "enu_vs_proj_topocentric_3d": error_statistics(independent_enu - coordinates["enu_m"]),
+        "interpretation": "Numerical consistency only; no independently surveyed ground truth",
+    }
+
+
+def write_xyz_pcd(path, xyz, intensity, description):
+    """ASCII float64 XYZ preserves large-coordinate precision in PCD readers."""
     count = len(intensity)
-    records = np.column_stack((coordinates["utm_easting_m"], coordinates["utm_northing_m"],
-                               coordinates["height_assumed_ellipsoid_m"], intensity))
+    records = np.column_stack((xyz, intensity))
     header = (
         "# .PCD v0.7\n"
-        f"# XY: EPSG:{epsg}; Z: assumed ellipsoidal height. See JSON metadata.\n"
+        f"# {description}\n"
         "VERSION 0.7\nFIELDS x y z intensity\nSIZE 8 8 8 4\n"
         "TYPE F F F F\nCOUNT 1 1 1 1\n"
         f"WIDTH {count}\nHEIGHT 1\nVIEWPOINT 0 0 0 1 0 0 0\nPOINTS {count}\nDATA ascii"
     )
     np.savetxt(path, records, fmt=["%.17g", "%.17g", "%.17g", "%.9g"],
                header=header, comments="", encoding="ascii")
+
+
+def write_utm_pcd(path, coordinates, intensity, epsg):
+    xyz = np.column_stack((coordinates["utm_easting_m"], coordinates["utm_northing_m"],
+                           coordinates["height_assumed_ellipsoid_m"]))
+    write_xyz_pcd(path, xyz, intensity,
+                  f"XY: EPSG:{epsg}; Z: assumed ellipsoidal height. See JSON metadata.")
 
 
 # Read this frame's OXTS/LiDAR timestamps and compute their time difference.
@@ -213,7 +288,7 @@ def main():
     parser.add_argument("--utm-epsg", type=int, help="Override automatic WGS84 UTM zone selection")
     parser.add_argument("--height-offset-m", type=float, default=0.0,
                         help="Add to OXTS altitude to obtain assumed ellipsoidal height (default: 0)")
-    parser.add_argument("--output", type=Path, help="CSV path; matching JSON and UTM PCD are also written")
+    parser.add_argument("--output", type=Path, help="CSV path; JSON, UTM PCD and ECEF PCD are also written")
     args = parser.parse_args()
     if args.frame < 0:
         parser.error("frame must be nonnegative")
@@ -256,20 +331,25 @@ def main():
             "pcd_axes": "x=UTM easting, y=UTM northing, z=assumed ellipsoidal height; all meters",
             "pcd_format": "PCD 0.7 ASCII; float64 XYZ, float32 intensity",
         })
+        metadata["numerical_checks"] = numerical_checks(xyz, coordinates, metadata)
         table = np.column_stack((
             np.arange(len(xyz)), xyz, intensity, coordinates["utm_easting_m"],
             coordinates["utm_northing_m"], coordinates["latitude_deg"],
             coordinates["longitude_deg"], coordinates["height_assumed_ellipsoid_m"],
-            coordinates["enu_m"],
+            coordinates["enu_m"], coordinates["ecef_m"],
         ))
         columns = ("point_index,lidar_x_m,lidar_y_m,lidar_z_m,intensity,utm_easting_m,"
                    "utm_northing_m,latitude_deg,longitude_deg,height_assumed_ellipsoid_m,"
-                   "enu_east_m,enu_north_m,enu_up_m")
+                   "enu_east_m,enu_north_m,enu_up_m,ecef_x_m,ecef_y_m,ecef_z_m")
         output.parent.mkdir(parents=True, exist_ok=True)
         np.savetxt(output, table, delimiter=",", header=columns, comments="",
-                   fmt=["%d"] + ["%.9g"] * 4 + ["%.6f"] * 2 + ["%.10f"] * 2 + ["%.6f"] * 4)
-        pcd_path = output.with_name(output.stem + "_utm.ply")
+                   fmt=["%d"] + ["%.9g"] * 4 + ["%.6f"] * 2 + ["%.10f"] * 2 + ["%.6f"] * 7)
+        pcd_path = output.with_name(output.stem + "_utm.pcd")
         write_utm_pcd(pcd_path, coordinates, intensity, metadata["utm_epsg"])
+        ecef_path = output.with_name(output.stem + "_ecef.pcd")
+        write_xyz_pcd(ecef_path, coordinates["ecef_m"], intensity,
+                      "ECEF XYZ: EPSG:4978, meters; altitude datum assumed. See JSON metadata.")
+        metadata["ecef_pcd_file"] = str(ecef_path.resolve())
         metadata["csv_file"] = str(output.resolve())
         metadata["utm_pcd_file"] = str(pcd_path.resolve())
         output.with_suffix(".json").write_text(json.dumps(metadata, indent=2, allow_nan=False) + "\n", encoding="utf-8")
@@ -280,6 +360,7 @@ def main():
     print(f"UTM: {metadata['utm_crs']} (EPSG:{metadata['utm_epsg']})")
     print(f"CSV: {output.resolve()}")
     print(f"PCD: {pcd_path.resolve()}")
+    print(f"ECEF PCD: {ecef_path.resolve()}")
     print(f"Metadata: {output.with_suffix('.json').resolve()}")
     print("Height datum is unverified; see height_assumption in metadata. No scan motion compensation.")
     if len(xyz) <= 10:

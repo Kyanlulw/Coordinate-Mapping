@@ -19,3 +19,7 @@ outputs/
 *.tiff
 *.gif
 *.webp
+
+# Regenerable large mapping tables and point arrays
+/Results/**/*.csv
+/Results/**/*.npz

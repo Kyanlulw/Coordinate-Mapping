@@ -1,0 +1,310 @@
+{
+  "point_count": 5,
+  "utm_epsg": 32632,
+  "utm_crs": "WGS 84 / UTM zone 32N",
+  "wgs84_horizontal_epsg": 4326,
+  "ecef_epsg": 4978,
+  "origin_oxts": {
+    "latitude_deg": 49.03082736607,
+    "longitude_deg": 8.3397870121153,
+    "reported_altitude_m": 114.57347869873,
+    "roll_rad": 0.033758,
+    "pitch_rad": -0.000435,
+    "yaw_rad": -0.9423586732051
+  },
+  "height_offset_m": 0.0,
+  "origin_assumed_ellipsoidal_height_m": 114.57347869873,
+  "height_datum_verified": false,
+  "T_ecef_from_lidar": [
+    [
+      0.5175977682537988,
+      -0.5445555515073532,
+      0.6599634852612105,
+      4145616.056408079
+    ],
+    [
+      0.67071364022633,
+      0.7371461255287034,
+      0.08221233458797128,
+      607720.5264607609
+    ],
+    [
+      -0.5312587392513759,
+      0.4000936030518659,
+      0.7467859482047069,
+      4792893.776569062
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "T_enu_from_lidar": [
+    [
+      0.5885469576764852,
+      0.8083351699752613,
+      -0.01438032201237641,
+      0.20613519224946011
+    ],
+    [
+      -0.8084615547463694,
+      0.5884180867967348,
+      -0.012415413965718384,
+      -0.8517447400469758
+    ],
+    [
+      -0.0015741743124715597,
+      0.018932996963421288,
+      0.9998194767593858,
+      0.7922555836811558
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "enu_origin": "OXTS/IMU position of this frame; ENU is local to each frame",
+  "rotation_convention": "R_enu_from_imu = Rz(yaw) @ Ry(pitch) @ Rx(roll)",
+  "motion_compensation": "None; all points use the OXTS pose with the same frame ID",
+  "height_assumption": "OXTS text files do not specify the altitude datum. OXTS altitude plus height_offset_m is treated as WGS84 ellipsoidal height in the geometry. This assumption affects height and, to a smaller degree, horizontal coordinates. No geoid correction is automatic.",
+  "precision_note": "Float64 calculations and PCD XYZ; printed precision is not measurement accuracy",
+  "references": [
+    "https://www.cvlibs.net/publications/Geiger2013IJRR.pdf",
+    "https://github.com/utiasSTARS/pykitti/blob/master/pykitti/utils.py",
+    "https://proj.org/en/stable/operations/conversions/topocentric.html",
+    "https://www.oxts.com/software/navsuite/documentation/manuals/NCOM_man.pdf"
+  ],
+  "pixel_reprojection_max_error_px": 1.1718571004216928e-13,
+  "world_reference": {
+    "latitude_deg": 49.030860615858,
+    "longitude_deg": 8.3397493123379,
+    "height_assumed_ellipsoid_m": 114.53007507324,
+    "origin_ecef_m": [
+      4145612.5452128868,
+      607717.0170340604,
+      4792896.128506604
+    ],
+    "R_ecef_from_world": [
+      [
+        -0.14504265603182423,
+        -0.7470783515484971,
+        0.6487191723533489
+      ],
+      [
+        0.9894254029138497,
+        -0.10951631932367699,
+        0.09509757026633484
+      ],
+      [
+        0.0,
+        0.6556524326572536,
+        0.755062836822622
+      ]
+    ],
+    "axes": "Fixed ENU: x east, y north, z up; meters, relative to reference IMU",
+    "frame_id": 0
+  },
+  "numerical_checks": {
+    "ecef_to_lidar_roundtrip_3d": {
+      "count": 5,
+      "rmse_m": 4.272075373697425e-10,
+      "median_m": 3.9714091081907797e-10,
+      "p95_m": 6.29973306365099e-10,
+      "max_m": 6.620087580323235e-10
+    },
+    "utm_height_to_ecef_roundtrip_3d": {
+      "count": 5,
+      "rmse_m": 1.0135489916279408e-09,
+      "median_m": 1.0477378964424133e-09,
+      "p95_m": 1.0631188182078004e-09,
+      "max_m": 1.0669640486491471e-09
+    },
+    "enu_vs_proj_topocentric_3d": {
+      "count": 5,
+      "rmse_m": 2.907952314661051e-10,
+      "median_m": 2.521892694550344e-10,
+      "p95_m": 3.9424972964685405e-10,
+      "max_m": 4.0279621623726873e-10
+    },
+    "interpretation": "Numerical consistency only; no independently surveyed ground truth"
+  },
+  "sequence": "/home/trandang/Desktop/Quydang/Coordinate-Mapping/2011_09_26/2011_09_26_drive_0048_sync",
+  "frame_id": 6,
+  "camera": 2,
+  "image_size": [
+    1242,
+    375
+  ],
+  "depth_source": "demo_exact_lidar_projection",
+  "calibration_dir": "/home/trandang/Desktop/Quydang/Coordinate-Mapping/2011_09_26",
+  "projection_lidar_to_image": [
+    [
+      609.6954091642638,
+      -721.4215973249585,
+      -1.2512585456597716,
+      -123.04180574734991
+    ],
+    [
+      180.3842015882277,
+      7.64479801920308,
+      -719.6514740348144,
+      -101.01668787418492
+    ],
+    [
+      0.9999453885620024,
+      0.00012436537838650657,
+      0.010451302995668946,
+      -0.2693869124058732
+    ]
+  ],
+  "depth_definition": "s = (P_total @ [x_lidar,y_lidar,z_lidar,1])[2], optical-axis meters, not range",
+  "max_pixel_distance": 2.0,
+  "timestamps": {
+    "oxts": "2011-09-26 14:14:11.534665769",
+    "lidar_forward": "2011-09-26 14:14:11.521854271",
+    "lidar_start": "2011-09-26 14:14:11.470159341",
+    "lidar_end": "2011-09-26 14:14:11.573549201",
+    "oxts_minus_lidar_ms": 12.811498,
+    "camera": "2011-09-26 14:14:11.532339712",
+    "camera_minus_lidar_ms": 10.485441
+  },
+  "rows": [
+    {
+      "query_id": 1,
+      "u_px": 806.7907318495895,
+      "v_px": 205.4909066104483,
+      "depth_m": 31.27577256768364,
+      "depth_source": "demo_exact_lidar_projection",
+      "lidar_point_index": 27019,
+      "matched_u_px": 806.7907318495895,
+      "matched_v_px": 205.4909066104483,
+      "match_distance_px": 0.0,
+      "lidar_x_m": 31.561000823974606,
+      "lidar_y_m": -8.472000122070314,
+      "lidar_z_m": -1.2500000000000009,
+      "world_x_m": 14.70794812644041,
+      "world_y_m": -35.03493893099852,
+      "world_z_m": -0.6242230144102656,
+      "ecef_x_m": 4145636.1808320116,
+      "ecef_y_m": 607735.346987029,
+      "ecef_z_m": 4792872.6864360655,
+      "utm_easting_m": 451751.9862522964,
+      "utm_northing_m": 5431061.240759636,
+      "height_assumed_ellipsoid_m": 113.90596529841423,
+      "latitude_deg": 49.030545588187024,
+      "longitude_deg": 8.339950437482292
+    },
+    {
+      "query_id": 2,
+      "u_px": 433.78106952193417,
+      "v_px": 207.09417739746507,
+      "depth_m": 23.15096203930139,
+      "depth_source": "demo_exact_lidar_projection",
+      "lidar_point_index": 25293,
+      "matched_u_px": 433.78106952193417,
+      "matched_v_px": 207.09417739746507,
+      "match_distance_px": 0.0,
+      "lidar_x_m": 23.43000030517578,
+      "lidar_y_m": 5.711999893188474,
+      "lidar_z_m": -0.8690000176429749,
+      "world_x_m": 21.38241254477131,
+      "world_y_m": -20.119942798358203,
+      "world_z_m": 0.038059206038242976,
+      "ecef_x_m": 4145624.4997144146,
+      "ecef_y_m": 607740.3804176261,
+      "ecef_z_m": 4792882.965554255,
+      "utm_easting_m": 451758.78758935875,
+      "utm_northing_m": 5431076.091335338,
+      "height_assumed_ellipsoid_m": 114.56820181757212,
+      "latitude_deg": 49.03067970081627,
+      "longitude_deg": 8.340041708795033
+    },
+    {
+      "query_id": 3,
+      "u_px": 619.9952770056348,
+      "v_px": 241.9922198301801,
+      "depth_m": 19.201610324258397,
+      "depth_source": "demo_exact_lidar_projection",
+      "lidar_point_index": 44472,
+      "matched_u_px": 619.9952770056348,
+      "matched_v_px": 241.9922198301801,
+      "match_distance_px": 0.0,
+      "lidar_x_m": 19.489999771118168,
+      "lidar_y_m": -0.19799999892711406,
+      "lidar_z_m": -1.7139999866485585,
+      "world_x_m": 14.298427551355779,
+      "world_y_m": -20.401666613508063,
+      "world_z_m": -0.9124770905784398,
+      "ecef_x_m": 4145625.121033057,
+      "ecef_y_m": 607733.3118025828,
+      "ecef_z_m": 4792882.063126718,
+      "utm_easting_m": 451751.704182187,
+      "utm_northing_m": 5431075.871342833,
+      "height_assumed_ellipsoid_m": 113.61764663923532,
+      "latitude_deg": 49.030677167787076,
+      "longitude_deg": 8.339944837981204
+    },
+    {
+      "query_id": 4,
+      "u_px": 248.05714778684094,
+      "v_px": 261.9432153048108,
+      "depth_m": 4.140224058109365,
+      "depth_source": "demo_exact_lidar_projection",
+      "lidar_point_index": 58039,
+      "matched_u_px": 248.05714778684094,
+      "matched_v_px": 261.9432153048108,
+      "match_distance_px": 0.0,
+      "lidar_x_m": 4.414999961853027,
+      "lidar_y_m": 2.138000011444092,
+      "lidar_z_m": -0.5180000066757202,
+      "world_x_m": 7.297148191916909,
+      "world_y_m": -6.854417220003741,
+      "world_z_m": 0.3512760245327673,
+      "ecef_x_m": 4145616.835481341,
+      "ecef_y_m": 607725.0210938918,
+      "ecef_z_m": 4792891.8996267505,
+      "utm_easting_m": 451744.82372036064,
+      "utm_northing_m": 5431089.473702797,
+      "height_assumed_ellipsoid_m": 114.88135895039886,
+      "latitude_deg": 49.03079898221198,
+      "longitude_deg": 8.339849098331186
+    },
+    {
+      "query_id": 5,
+      "u_px": 993.4300666783989,
+      "v_px": 262.2208523308745,
+      "depth_m": 12.200206029764175,
+      "depth_source": "demo_exact_lidar_projection",
+      "lidar_point_index": 51975,
+      "matched_u_px": 993.4300666783989,
+      "matched_v_px": 262.2208523308745,
+      "match_distance_px": 0.0,
+      "lidar_x_m": 12.487000465393066,
+      "lidar_y_m": -6.4149999618530265,
+      "lidar_z_m": -1.5240000486373904,
+      "world_x_m": 5.148680675106336,
+      "world_y_m": -18.400569652713305,
+      "world_z_m": -0.8291888428907797,
+      "ecef_x_m": 4145625.0071911104,
+      "ecef_y_m": 607724.0475783295,
+      "ecef_z_m": 4792883.438038669,
+      "utm_easting_m": 451742.5757471254,
+      "utm_northing_m": 5431077.951166748,
+      "height_assumed_ellipsoid_m": 113.7009148709476,
+      "latitude_deg": 49.03069516141687,
+      "longitude_deg": 8.339819718642891
+    }
+  ],
+  "limitations": "Sparse nearest-sample depth assumes the same surface; pixel-only 3D is not unique. Z-buffer does not fully resolve camera/LiDAR occlusion. No scan deskew. Exact-projection demo and reprojection errors measure numerical consistency, not physical accuracy.",
+  "demo_lidar_roundtrip_3d": {
+    "count": 5,
+    "rmse_m": 2.959530577352099e-15,
+    "median_m": 2.6645352591003757e-15,
+    "p95_m": 4.327669980563144e-15,
+    "max_m": 4.39205126597841e-15
+  }
+}

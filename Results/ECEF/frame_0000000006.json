@@ -1,0 +1,131 @@
+{
+  "point_count": 114395,
+  "utm_epsg": 32632,
+  "utm_crs": "WGS 84 / UTM zone 32N",
+  "wgs84_horizontal_epsg": 4326,
+  "ecef_epsg": 4978,
+  "origin_oxts": {
+    "latitude_deg": 49.03082736607,
+    "longitude_deg": 8.3397870121153,
+    "reported_altitude_m": 114.57347869873,
+    "roll_rad": 0.033758,
+    "pitch_rad": -0.000435,
+    "yaw_rad": -0.9423586732051
+  },
+  "height_offset_m": 0.0,
+  "origin_assumed_ellipsoidal_height_m": 114.57347869873,
+  "height_datum_verified": false,
+  "T_ecef_from_lidar": [
+    [
+      0.5175977682537988,
+      -0.5445555515073532,
+      0.6599634852612105,
+      4145616.056408079
+    ],
+    [
+      0.67071364022633,
+      0.7371461255287034,
+      0.08221233458797128,
+      607720.5264607609
+    ],
+    [
+      -0.5312587392513759,
+      0.4000936030518659,
+      0.7467859482047069,
+      4792893.776569062
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "T_enu_from_lidar": [
+    [
+      0.5885469576764852,
+      0.8083351699752613,
+      -0.01438032201237641,
+      0.20613519224946011
+    ],
+    [
+      -0.8084615547463694,
+      0.5884180867967348,
+      -0.012415413965718384,
+      -0.8517447400469758
+    ],
+    [
+      -0.0015741743124715597,
+      0.018932996963421288,
+      0.9998194767593858,
+      0.7922555836811558
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "enu_origin": "OXTS/IMU position of this frame; ENU is local to each frame",
+  "rotation_convention": "R_enu_from_imu = Rz(yaw) @ Ry(pitch) @ Rx(roll)",
+  "motion_compensation": "None; all points use the OXTS pose with the same frame ID",
+  "height_assumption": "OXTS text files do not specify the altitude datum. OXTS altitude plus height_offset_m is treated as WGS84 ellipsoidal height in the geometry. This assumption affects height and, to a smaller degree, horizontal coordinates. No geoid correction is automatic.",
+  "precision_note": "Float64 calculations and PCD XYZ; printed precision is not measurement accuracy",
+  "references": [
+    "https://www.cvlibs.net/publications/Geiger2013IJRR.pdf",
+    "https://github.com/utiasSTARS/pykitti/blob/master/pykitti/utils.py",
+    "https://proj.org/en/stable/operations/conversions/topocentric.html",
+    "https://www.oxts.com/software/navsuite/documentation/manuals/NCOM_man.pdf"
+  ],
+  "sequence": "2011_09_26_drive_0048_sync",
+  "frame_id": "0000000006",
+  "lidar_file": "/home/trandang/Desktop/Quydang/Coordinate-Mapping/2011_09_26/2011_09_26_drive_0048_sync/velodyne_points/data/0000000006.bin",
+  "manual_lidar_points": null,
+  "oxts_file": "/home/trandang/Desktop/Quydang/Coordinate-Mapping/2011_09_26/2011_09_26_drive_0048_sync/oxts/data/0000000006.txt",
+  "calibration_file": "/home/trandang/Desktop/Quydang/Coordinate-Mapping/2011_09_26/calib_imu_to_velo.txt",
+  "timestamps": {
+    "oxts": "2011-09-26 14:14:11.534665769",
+    "lidar_forward": "2011-09-26 14:14:11.521854271",
+    "lidar_start": "2011-09-26 14:14:11.470159341",
+    "lidar_end": "2011-09-26 14:14:11.573549201",
+    "oxts_minus_lidar_ms": 12.811498
+  },
+  "oxts_reported_position_accuracy_m": 0.1161034021896,
+  "oxts_status": {
+    "navstat": 4,
+    "numsats": 7,
+    "posmode": 5,
+    "velmode": 5,
+    "orimode": 6
+  },
+  "pcd_axes": "x=UTM easting, y=UTM northing, z=assumed ellipsoidal height; all meters",
+  "pcd_format": "PCD 0.7 ASCII; float64 XYZ, float32 intensity",
+  "numerical_checks": {
+    "ecef_to_lidar_roundtrip_3d": {
+      "count": 114395,
+      "rmse_m": 4.0618367695154915e-10,
+      "median_m": 3.169661365602342e-10,
+      "p95_m": 6.977040139382353e-10,
+      "max_m": 7.897888438449977e-10
+    },
+    "utm_height_to_ecef_roundtrip_3d": {
+      "count": 114395,
+      "rmse_m": 1.1025069047797074e-09,
+      "median_m": 9.385703304198744e-10,
+      "p95_m": 1.923496793240577e-09,
+      "max_m": 3.390065342784169e-09
+    },
+    "enu_vs_proj_topocentric_3d": {
+      "count": 114395,
+      "rmse_m": 3.0241423572400006e-10,
+      "median_m": 2.729119693553084e-10,
+      "p95_m": 4.6411865527388276e-10,
+      "max_m": 5.20889939028647e-10
+    },
+    "interpretation": "Numerical consistency only; no independently surveyed ground truth"
+  },
+  "ecef_pcd_file": "/home/trandang/Desktop/Quydang/Coordinate-Mapping/Results/ECEF/frame_0000000006_ecef.pcd",
+  "csv_file": "/home/trandang/Desktop/Quydang/Coordinate-Mapping/Results/ECEF/frame_0000000006.csv",
+  "utm_pcd_file": "/home/trandang/Desktop/Quydang/Coordinate-Mapping/Results/ECEF/frame_0000000006_utm.pcd"
+}
