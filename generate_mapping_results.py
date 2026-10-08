@@ -124,7 +124,42 @@ Báo cáo và hình được tạo từ dữ liệu KITTI có sẵn bằng `pyth
 - [x] Kiểm tra sai số số học của phép biến đổi và khoảng cách giữa các cloud.
 - [ ] Sai số định vị tuyệt đối so với điểm khảo sát độc lập: chưa có ground truth.
 
+## Báo cáo này dùng để kiểm tra điều gì?
+
+Mục đích chung của báo cáo là kiểm tra toàn bộ chuỗi ánh xạ tọa độ có hoạt động
+đúng và nhất quán hay không, từ cảm biến đến hệ tọa độ toàn cầu. Mỗi nhóm kết quả
+trả lời một câu hỏi kỹ thuật khác nhau:
+
+| Nhóm kết quả | Câu hỏi cần kiểm tra | Ứng dụng của kết quả |
+|---|---|---|
+| World / UTM và sai số số học | Công thức, chiều ma trận, thứ tự quay, hệ trục và phép chiếu có nhất quán không? | Phát hiện lỗi triển khai trước khi dùng tọa độ cho bản đồ hoặc đo đạc |
+| ECEF | Một scan LiDAR có được đặt vào hệ tọa độ tuyệt đối gắn với Trái Đất không? | Trao đổi dữ liệu giữa các hệ địa lý và làm hệ trung gian để ghép nhiều frame |
+| Ghép point cloud nhiều frame | Pose OXTS có bù được chuyển động của xe để các bề mặt tĩnh chồng lên nhau không? | Tạo bản đồ 3D rộng hơn một scan và đánh giá mức chồng lấn giữa các frame |
+| Camera Pixel → World / UTM | Pixel cộng depth có đi ngược đúng qua camera, LiDAR và pose để ra tọa độ thế giới không? | Gán tọa độ địa lý cho vật thể hoặc điểm được phát hiện trên ảnh |
+| Giới hạn | Các con số nào chỉ kiểm tra phần mềm, và kết luận nào cần ground truth? | Tránh hiểu sai sai số số học thành độ chính xác ngoài thực địa |
+
+Báo cáo vì vậy là một bài kiểm tra tích hợp của pipeline. Nó chứng minh dữ liệu đi
+qua các bước đúng về mặt toán học và cho các đầu ra hợp lý. Nó chưa phải chứng nhận
+độ chính xác tuyệt đối ngoài thực địa vì chưa có điểm khảo sát độc lập làm ground truth.
+
 ## 1. Sai số tọa độ World / UTM
+
+**Mục đích.** Phần này kiểm tra nền tảng toán học của pipeline trước khi đánh giá
+point cloud bằng mắt. Nó được dùng để phát hiện các lỗi thường gặp như đảo sai chiều
+ma trận IMU–LiDAR, sai dấu hoặc thứ tự roll/pitch/yaw, nhầm latitude với longitude,
+chọn sai UTM zone, hoặc làm mất độ chính xác khi chuyển giữa các hệ tọa độ.
+
+Mỗi dòng trong bảng có một nhiệm vụ riêng:
+
+- **LiDAR → ECEF → LiDAR:** kiểm tra ma trận tổng và ma trận nghịch đảo có khôi phục
+  đúng điểm đầu vào hay không.
+- **UTM + height → ECEF:** kiểm tra phép chiếu WGS84/UTM và thứ tự longitude/latitude.
+- **ENU so với PROJ topocentric:** so công thức ENU tự triển khai với thư viện PROJ
+  độc lập để kiểm tra hướng trục East/North/Up.
+- **World → ECEF:** kiểm tra hệ World cố định và gốc frame 0 có thể đổi ngược về ECEF.
+
+Nếu một giá trị ở đây lớn bất thường, cần sửa công thức hoặc quy ước hệ trục trước
+khi tin vào các kết quả ECEF, ghép frame hay Pixel → World ở các phần sau.
 
 World được định nghĩa là ENU cố định tại IMU frame **{reference['frame_id']}**:
 latitude = **{reference['latitude_deg']:.11f}°**, longitude = **{reference['longitude_deg']:.11f}°**,
@@ -150,6 +185,16 @@ tọa độ giữa hai ảnh làm sai số tuyệt đối. Khi có cặp điểm
 
 ## 2. Kết quả chuyển sang ECEF
 
+**Mục đích.** Phần này kiểm tra khả năng đặt toàn bộ scan vào một hệ Cartesian tuyệt
+đối có gốc tại tâm Trái Đất. ECEF đóng vai trò hệ trung gian chung: hai điểm từ các
+frame khác nhau có thể được so sánh trong cùng một hệ trước khi đổi sang World hoặc
+UTM. Kết quả cũng kiểm tra rằng số điểm được bảo toàn, tọa độ hữu hạn và dữ liệu
+float64 không làm mất phần chênh lệch nhỏ khi nền tọa độ có giá trị hàng triệu mét.
+
+Các tọa độ trong bảng và hình được dùng để xác nhận cloud nằm gần vị trí OXTS dự
+kiến và vẫn giữ đúng hình dạng cục bộ. Chúng không tự chứng minh vị trí ngoài đời là
+chính xác; muốn kiểm tra điều đó phải so với tọa độ khảo sát độc lập của cùng một điểm.
+
 Chuyển **{geo_meta['point_count']:,} điểm** của frame {frame} theo chuỗi:
 LiDAR → IMU → ENU tại OXTS → ECEF. ECEF sử dụng **EPSG:4978**, đơn vị mét.
 Tọa độ ECEF là tọa độ tuyệt đối gốc tâm Trái Đất; hình bên dưới trừ một tâm hiển thị
@@ -166,6 +211,18 @@ Tệp: [CSV](ECEF/{frame_stem}.csv), [ECEF PCD](ECEF/{frame_stem}_ecef.pcd),
 PCD dùng ASCII float64 XYZ; khi mở tọa độ lớn trong CloudCompare nên chấp nhận Global Shift.
 
 ## 3. Kết quả ghép point cloud nhiều frame
+
+**Mục đích.** Phần này kiểm tra xem pose của từng frame có bù đúng chuyển động của
+xe hay không. Nếu phép biến đổi đúng, tường, mặt đường và các vật thể tĩnh quan sát
+ở nhiều thời điểm sẽ nằm gần nhau trong cùng hệ World. Nếu dùng sai pose, sai chiều
+extrinsic hoặc sai gốc tọa độ, các cấu trúc này sẽ tách thành nhiều bản sao hoặc bị
+kéo thành vệt.
+
+Hình so sánh trái/phải là kiểm tra trực quan trực tiếp: hình trái cố tình đặt mọi
+scan tại pose tham chiếu để cho thấy hậu quả khi bỏ qua ego-motion; hình phải áp dụng
+pose OXTS riêng cho từng scan. Thống kê nearest-neighbor bổ sung một phép đo định
+lượng về độ chồng lấn. Số điểm sau voxel cho biết mức giảm dữ liệu và khả năng tạo
+một cloud đủ nhẹ để lưu trữ hoặc hiển thị, chứ không đo độ chính xác định vị.
 
 Ghép các frame **{', '.join(map(str, merged['frames']))}** bằng tư thế OXTS tương ứng,
 sau đó đưa vào cùng ECEF, cùng gốc World và cùng vùng UTM.
@@ -200,6 +257,17 @@ Tệp: [World PCD](MultiFrame/merged_world.pcd), [UTM PCD](MultiFrame/merged_utm
 
 ## 4. Kết quả Camera Pixel → World / UTM
 
+**Mục đích.** Phần này kiểm tra chiều ngược của pipeline camera: từ một quan sát 2D
+trên ảnh, kết hợp với depth, khôi phục điểm 3D LiDAR rồi đặt điểm đó vào World, UTM
+và ECEF. Đây là bước cần thiết khi muốn gán vị trí địa lý cho tâm một bounding box,
+điểm ảnh của biển báo, góc công trình hoặc một feature được phát hiện trên ảnh.
+
+Năm ví dụ dùng chính điểm LiDAR đã biết để kiểm tra công thức nghịch đảo, thành phần
+tịnh tiến và stereo baseline. Sai số chiếu lại trả lời câu hỏi “điểm khôi phục có
+quay về đúng pixel ban đầu không?”, còn sai số khôi phục LiDAR trả lời “tọa độ 3D có
+quay về đúng điểm ban đầu không?”. Vì đầu vào và đầu ra dùng cùng calibration, đây
+là kiểm tra vòng kín của phần mềm, không phải đo sai số camera–LiDAR ngoài thực tế.
+
 Ảnh đầu vào là ảnh KITTI đã rectified đúng kích thước hiệu chuẩn.
 Một pixel riêng lẻ chỉ xác định một tia; để lấy tọa độ 3D cần thêm độ sâu.
 Ví dụ dưới dùng **{len(pixel_meta['rows'])} pixel tại đúng vị trí chiếu của điểm LiDAR frame {frame}**,
@@ -230,6 +298,11 @@ Tệp: [bảng đầy đủ gồm ECEF, latitude/longitude, height](CameraToWorl
 [metadata, nguồn depth và point index](CameraToWorld/pixel_world.json).
 
 ## 5. Giới hạn và cách chạy lại
+
+**Mục đích.** Phần này xác định phạm vi có thể tin cậy của các kết quả. Nó phân biệt
+lỗi số học của phần mềm với sai số cảm biến và môi trường mà các phép kiểm tra vòng
+kín không thể nhìn thấy. Khi cần báo cáo độ chính xác thực địa, phải bổ sung ground
+truth, deskew theo thời gian, đánh giá calibration/synchronization và loại vật thể động.
 
 Một pose OXTS được áp dụng cho toàn bộ scan; chưa deskew từng điểm hoặc loại vật thể
 động. Cao độ OXTS cộng `height-offset-m` được giả định là cao độ ellipsoid WGS84;
